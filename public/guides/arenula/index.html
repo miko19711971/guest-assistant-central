@@ -1,44 +1,154 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Check-in Guide — Via Arenula 16</title>
 <style>
-body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
-h1 { color: #333; }
-h3 { margin-top: 25px; }
-img { max-width: 100%; height: auto; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; }
-p { margin: 5px 0; }
+:root{
+--bg: #f5efe5; /* beige chiaro */
+--ink:#1f2428;
+--muted:#5b6066;
+--accent:#7B3F00; /* marrone pulsante */
+--card:#fffdfa;
+--border:#e5dac9;
+}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:20px 16px 56px}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.tabs a{display:inline-block;margin-right:8px;padding:8px 10px;border-radius:8px;font-weight:700;text-decoration:none;color:var(--ink);border:1px solid var(--border);background:#fff}
+.tabs a.active{background:var(--ink);color:#fff}
+h1{font-size:28px;margin:8px 0 4px}
+.meta{color:var(--muted);margin:0 0 20px}
+.notice{background:var(--card);border:1px dashed var(--border);padding:10px 12px;border-radius:8px;color:var(--muted);margin:8px 0 18px}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;
+padding:12px 16px;border-radius:10px}
+.step{background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 14px 10px;margin:14px 0}
+.step h2{margin:0 0 8px;font-size:18px}
+figure{margin:10px 0 0}
+figure img{width:100%;height:auto;border-radius:10px;border:1px solid var(--border)}
+.muted{color:var(--muted)}
+footer{margin-top:28px;color:var(--muted)}
+/* lingua */
+[data-i18n]{display:none}
+.lang-en [data-i18n="en"], .lang-it [data-i18n="it"]{display:block}
 </style>
+<script>
+function setLang(l){
+document.documentElement.classList.remove('lang-en','lang-it');
+document.documentElement.classList.add('lang-'+l);
+localStorage.setItem('ga_lang', l);
+}
+document.addEventListener('DOMContentLoaded',()=>{
+setLang(localStorage.getItem('ga_lang') || 'en');
+document.querySelectorAll('[data-tab]').forEach(a=>{
+a.addEventListener('click',e=>{
+e.preventDefault();
+setLang(a.dataset.tab);
+document.querySelectorAll('.tabs a').forEach(t=>t.classList.remove('active'));
+a.classList.add('active');
+});
+});
+// attiva pill corretta all’avvio
+const cur = localStorage.getItem('ga_lang') || 'en';
+document.querySelector(`.tabs a[data-tab="${cur}"]`)?.classList.add('active');
+});
+</script>
 </head>
-<body>
+<body class="lang-en">
+<div class="wrap">
+<header>
+<nav class="tabs">
+<a href="#" data-tab="en" class="active">INGLESE</a>
+<a href="#" data-tab="it">ITALIANO</a>
+</nav>
+</header>
 
+<!-- ===== ENGLISH ===== -->
+<section data-i18n="en">
 <h1>Check-in Guide — Via Arenula 16</h1>
-<p><b>Address:</b> Via Arenula 16, Rome</p>
-<p><b>Intercom:</b> Buzzer 16 – Elevator: private, do not use</p>
-<p><b>Call if help needed:</b> +39 345 587 9366</p>
+<p class="meta">
+<strong>Address:</strong> Via Arenula 16, Rome<br>
+<strong>Intercom:</strong> Buzzer 16 — Elevator: private, do not use<br>
+<strong>Call if help needed:</strong> +39 345 587 9366
+</p>
 
-<h3>1) Arriving at the building</h3>
-<p>When you reach Via Arenula 16, look for the large wooden entrance door with the number 16 engraved on the stone frame.</p>
-<img src="/guides/building-facade.jpg" alt="Building facade">
+<div class="step">
+<h2>Step 1 — Open the building door</h2>
+<p class="notice">Use the button below. The link works once and is valid for 5 minutes.</p>
+<p><a class="btn" href="/t/arenula-building-door" rel="nofollow">👉 OPEN BUILDING DOOR</a></p>
+<figure><img src="../building-facade.jpg" alt="Building facade"></figure>
+</div>
 
-<h3>2) Intercom</h3>
-<p>At the entrance, use the intercom and ring the bell marked <b>16</b>.</p>
-<img src="/guides/intercom.jpg" alt="Intercom">
+<div class="step">
+<h2>Step 2 — Intercom</h2>
+<p>At the entrance, use the intercom and ring the bell marked <strong>16</strong>.</p>
+<figure><img src="../intercom.jpg" alt="Intercom buzzer 16"></figure>
+</div>
 
-<h3>3) Hallway</h3>
+<div class="step">
+<h2>Step 3 — Hallway</h2>
 <p>Once inside, walk straight down the hallway until you reach the staircase.</p>
-<img src="/guides/hallway.jpg" alt="Hallway">
+<figure><img src="../hallway.jpg" alt="Hallway"></figure>
+</div>
 
-<h3>4) Key safe</h3>
-<p>The keys are stored in a key safe located near the entrance of the apartment. Follow the instructions provided for the code.</p>
-<img src="/guides/key-safe.jpg" alt="Key safe">
+<div class="step">
+<h2>Step 4 — Key safe</h2>
+<p>The keys are in the key safe near the entrance of the apartment. Use the code we sent you.</p>
+<figure><img src="../key-safe.jpg" alt="Key safe"></figure>
+</div>
 
-<h3>5) Apartment door</h3>
+<div class="step">
+<h2>Step 5 — Apartment door</h2>
 <p>After retrieving the keys, go to the apartment door and open it with the provided set.</p>
-<img src="/guides/apartment-door.jpg" alt="Apartment door">
+<figure><img src="../apartment-door.jpg" alt="Apartment door"></figure>
+</div>
 
-<p><i>Enjoy your stay!</i></p>
+<footer>Enjoy your stay!</footer>
+</section>
 
+<!-- ===== ITALIANO ===== -->
+<section data-i18n="it">
+<h1>Guida al Check-in — Via Arenula 16</h1>
+<p class="meta">
+<strong>Indirizzo:</strong> Via Arenula 16, Roma<br>
+<strong>Citofono:</strong> Campanello 16 — Ascensore: privato, non usare<br>
+<strong>Se serve aiuto:</strong> +39 345 587 9366
+</p>
+
+<div class="step">
+<h2>Passo 1 — Apri il portone</h2>
+<p class="notice">Usa il pulsante qui sotto. Il link funziona una volta ed è valido 5 minuti.</p>
+<p><a class="btn" href="/t/arenula-building-door" rel="nofollow">👉 APRI PORTONE</a></p>
+<figure><img src="../building-facade.jpg" alt="Facciata del palazzo"></figure>
+</div>
+
+<div class="step">
+<h2>Passo 2 — Citofono</h2>
+<p>All’ingresso usa il citofono e suona il campanello <strong>16</strong>.</p>
+<figure><img src="../intercom.jpg" alt="Citofono 16"></figure>
+</div>
+
+<div class="step">
+<h2>Passo 3 — Corridoio</h2>
+<p>Entra e prosegui dritto nel corridoio fino alle scale.</p>
+<figure><img src="../hallway.jpg" alt="Corridoio"></figure>
+</div>
+
+<div class="step">
+<h2>Passo 4 — Cassaforte chiavi</h2>
+<p>La cassaforte è vicino all’ingresso dell’appartamento. Usa il codice ricevuto.</p>
+<figure><img src="../key-safe.jpg" alt="Cassaforte per le chiavi"></figure>
+</div>
+
+<div class="step">
+<h2>Passo 5 — Porta appartamento</h2>
+<p>Recuperate le chiavi, vai alla porta dell’appartamento e apri.</p>
+<figure><img src="../apartment-door.jpg" alt="Porta dell’appartamento"></figure>
+</div>
+
+<footer>Buon soggiorno!</footer>
+</section>
+</div>
 </body>
 </html>
