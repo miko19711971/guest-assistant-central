@@ -1,15 +1,14 @@
 {
 "name": "guest-assistant-central",
 "version": "1.0.0",
-"description": "Unified opener & guides for guest self check-in",
+"description": "Unified opener & guides for Shelly smart devices",
 "main": "src/server.js",
 "type": "module",
 "scripts": {
 "start": "node src/server.js"
 },
 "dependencies": {
-"express": "^4.18.2",
-"axios": "^1.6.8",
+"express": "^4.19.2",
 "cors": "^2.8.5"
 }
 }
