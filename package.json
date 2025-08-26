@@ -1,14 +1,15 @@
 {
-  "name": "guest-assistant-central",
-  "version": "1.0.0",
-  "description": "Unified opener + guides for all apartments",
-  "main": "src/server.js",
-  "type": "module",
-  "scripts": {
-    "start": "node src/server.js"
-  },
-  "dependencies": {
-    "axios": "^1.6.0",
-    "express": "^4.18.2"
-  }
+"name": "guest-assistant-central",
+"version": "1.0.0",
+"description": "Unified opener & guides for guest self check-in",
+"main": "src/server.js",
+"type": "module",
+"scripts": {
+"start": "node src/server.js"
+},
+"dependencies": {
+"express": "^4.18.2",
+"axios": "^1.6.8",
+"cors": "^2.8.5"
+}
 }
