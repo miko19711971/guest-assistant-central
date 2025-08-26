@@ -17,8 +17,8 @@ app.use(express.json());
 app.use("/public", express.static("public", { maxAge: "12h", immutable: true }));
 
 // ====== TARGETS ======
-// Metti qui gli ID reali dei device (Shelly Cloud -> Devices).
-// Se un target usa un altro canale, aggiungi channel: 1, ecc.
+// Sostituisci CHANGE_ME con gli id reali dei device (Shelly Cloud -> Devices)
+// Usa channel: 0 o 1 in base al relè corretto
 const TARGETS = {
 "leonina-door": { label: "Leonina — Apartment Door", device_id: "CHANGE_ME", channel: 0 },
 "leonina-building-door": { label: "Leonina — Building Door", device_id: "CHANGE_ME", channel: 0 },
@@ -26,20 +26,18 @@ const TARGETS = {
 "scala-building-door": { label: "Scala — Building Door", device_id: "CHANGE_ME", channel: 0 },
 "ottavia-door": { label: "Ottavia — Apartment Door", device_id: "CHANGE_ME", channel: 0 },
 "ottavia-building-door": { label: "Ottavia — Building Door", device_id: "CHANGE_ME", channel: 0 },
-"viale-trastevere-door": { label: "Viale Trastevere — APT Door",device_id: "CHANGE_ME", channel: 0 },
+"viale-trastevere-door": { label: "Viale Trastevere — APT Door", device_id: "CHANGE_ME", channel: 0 },
 "viale-trastevere-building-door": { label: "Viale Trastevere — Building Door", device_id: "CHANGE_ME", channel: 0 },
 "arenula-building-door": { label: "Arenula — Building Door", device_id: "CHANGE_ME", channel: 0 },
 };
 
-// ====== UTILS ======
+// ====== TOKEN (piano B) ======
 function sign(data, ttlSec = 180) {
-// token semplice HMAC: target|exp|signature
 const exp = Math.floor(Date.now() / 1000) + ttlSec;
 const msg = `${data}|${exp}`;
 const sig = crypto.createHmac("sha256", TOKEN_SECRET).update(msg).digest("hex");
 return Buffer.from(`${data}|${exp}|${sig}`).toString("base64url");
 }
-
 function verify(token, data) {
 try {
 const raw = Buffer.from(token, "base64url").toString("utf8");
@@ -54,6 +52,7 @@ return false;
 }
 }
 
+// ====== CHIAMATA A SHELLY (con doppio metodo auth) ======
 async function controlShelly(target) {
 if (!API_KEY) throw new Error("missing_api_key");
 if (!target?.device_id) throw new Error("missing_device_id");
@@ -61,27 +60,43 @@ if (!target?.device_id) throw new Error("missing_device_id");
 const url = `${BASE_URL}/device/relay/control`;
 const payload = {
 id: target.device_id,
-auth_key: API_KEY,
 channel: target.channel ?? 0,
 turn: "on",
-timer: 1, // 1 secondo
+timer: 1,
 };
 
-const res = await fetch(url, {
+// A) auth_key nel body
+try {
+const resA = await fetch(url, {
 method: "POST",
 headers: { "Content-Type": "application/json" },
-body: JSON.stringify(payload),
+body: JSON.stringify({ ...payload, auth_key: API_KEY }),
 });
-
-// Shelly Cloud in genere risponde { isok: true/false, data/error... }
-const data = await res.json().catch(() => ({}));
-if (!res.ok || data?.isok === false) {
-const details = { status: res.status, data };
+const dataA = await resA.json().catch(() => ({}));
+if (resA.ok && dataA?.isok !== false) return dataA;
+if (resA.status !== 401) {
 const err = new Error("cloud_error");
-err.details = details;
+err.details = { status: resA.status, data: dataA };
 throw err;
 }
-return data;
+} catch {}
+
+// B) Authorization: Bearer <API_KEY>
+const resB = await fetch(url, {
+method: "POST",
+headers: {
+"Content-Type": "application/json",
+"Authorization": `Bearer ${API_KEY}`,
+},
+body: JSON.stringify(payload),
+});
+const dataB = await resB.json().catch(() => ({}));
+if (!resB.ok || dataB?.isok === false) {
+const err = new Error("cloud_error");
+err.details = { status: resB.status, data: dataB };
+throw err;
+}
+return dataB;
 }
 
 // ====== ROUTES ======
@@ -91,42 +106,40 @@ app.get("/health", (req, res) => {
 res.send({ ok: true, targets: Object.keys(TARGETS).length, node: process.version, uptime: process.uptime() });
 });
 
-// Index HTML con elenco link
+// Home con link rapidi
 app.get("/", (req, res) => {
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Rome"
-const items = Object.entries(TARGETS)
-.map(([key, t]) => {
+const items = Object.entries(TARGETS).map(([key, t]) => {
 const smart = `/smart/${key}`;
 const test = `/test/${key}`;
 return `<li><b>${key}</b> — ${t.label} &nbsp; <a href="${smart}">smart link (redirect)</a> &nbsp; <a href="${test}">test open (senza token)</a></li>`;
-})
-.join("\n");
+}).join("\n");
 
 res.type("html").send(`
 <h2>Guest Assistant — Unified Opener & Guides</h2>
 <p>${Object.keys(TARGETS).length} targets configured. TZ=${tz}</p>
-<p>Guides folder: <code>/guides/...</code> (vedi file in <code>/public/guides</code>)</p>
+<p>Guides folder: <code>/guides/...</code> (file in <code>/public/guides</code>)</p>
 <ul>${items}</ul>
 <p><a href="/health">/health</a></p>
 `);
 });
 
-// Smart link: crea token e redirige su /open/:target?t=...
+// Smart link -> genera token e reindirizza
 app.get("/smart/:target", (req, res) => {
 const key = req.params.target;
 const target = TARGETS[key];
 if (!target) return res.status(404).send("Unknown target");
-const t = sign(key, 180); // 3 minuti
+const t = sign(key, 180);
 res.redirect(302, `/open/${encodeURIComponent(key)}?t=${encodeURIComponent(t)}`);
 });
 
-// Apertura con token (se c'è lo verifichiamo; se manca, opzionalmente puoi rifiutare)
+// Apertura con token (piano B). Se vuoi forzare la presenza del token, scommenta il blocco.
 app.get("/open/:target", async (req, res) => {
 const key = req.params.target;
 const target = TARGETS[key];
 if (!target) return res.status(404).send({ ok: false, error: "unknown_target" });
 
-// Se vuoi forzare il token, scommenta il blocco seguente:
+// // Forza token:
 // const tok = req.query.t;
 // if (!tok || !verify(tok, key)) {
 // return res.status(401).send({ ok: false, error: "expired" });
@@ -140,7 +153,7 @@ res.status(400).send({ ok: false, error: err.message, details: err.details });
 }
 });
 
-// Test (sempre senza token)
+// Test senza token
 app.get("/test/:target", async (req, res) => {
 const key = req.params.target;
 const target = TARGETS[key];
